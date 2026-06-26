@@ -1,0 +1,49 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                 Int               @id @default(autoincrement())
+  email              String            @unique
+  hashed_password    String?
+  session_token      String?           @unique
+  session_expires_at DateTime?
+  name               String?
+  created_at         DateTime          @default(now())
+  oauth_connections  OAuthConnection[]
+  learning_paths     LearningPath[]
+
+  @@map("users")
+}
+
+model OAuthConnection {
+  id                    Int      @id @default(autoincrement())
+  user_id               Int
+  provider              String
+  connected_account_id  String
+  notion_parent_page_id String?
+  created_at            DateTime @default(now())
+  user                  User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, provider], name: "uix_user_provider")
+  @@map("oauth_connections")
+}
+
+model LearningPath {
+  id             Int      @id @default(autoincrement())
+  user_id        Int
+  goal           String
+  playlist_url   String?
+  google_doc_url String?
+  notion_url     String?
+  markdown       String?
+  created_at     DateTime @default(now())
+  user           User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("learning_paths")
+}
